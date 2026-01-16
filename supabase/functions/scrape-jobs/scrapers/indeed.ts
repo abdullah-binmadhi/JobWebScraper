@@ -190,7 +190,7 @@ function generateSampleJobs(keyword: string, platform: string, filters: Filters)
         salary_period: 'month',
         description: `Join our dynamic team as a ${keyword}! We offer competitive benefits, career growth opportunities, and a collaborative work environment. Looking for motivated individuals with strong problem-solving skills.`,
         posted_date: new Date(now.getTime() - (i * 2 * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://my.indeed.com/viewjob?jk=${Date.now()}-${i}`,
+        original_url: `https://my.indeed.com/jobs?q=${encodeURIComponent(keyword)}`,
         source_platform: platform,
         experience_level: ['Entry Level', 'Senior', 'Mid Level', 'Entry Level', 'Mid Level'][i % 5],
     }))

@@ -166,7 +166,7 @@ function generateLinkedInJobs(keyword: string, filters: Filters): JobListing[] {
             description: `${company.name} is looking for a talented ${jobTitles[i]} to join our growing team. You will work on impactful projects, collaborate with world-class engineers, and have opportunities for professional growth. We offer competitive compensation, flexible work arrangements, and comprehensive benefits.`,
             requirements: `• Bachelor's degree in relevant field\n• ${i + 1}+ years of experience in ${keyword}\n• Strong analytical and problem-solving skills\n• Excellent communication abilities`,
             posted_date: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)).toISOString(),
-            original_url: `https://www.linkedin.com/jobs/view/${3500000000 + i}`,
+            original_url: `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(keyword)}`,
             source_platform: 'linkedin',
             experience_level: levels[i],
             logo_url: company.logo,

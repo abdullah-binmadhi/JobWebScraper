@@ -151,7 +151,7 @@ function generateSampleJobs(keyword: string, platform: string, filters: Filters)
         salary_period: 'month',
         description: `Exciting opportunity to work as a ${keyword} at a fast-growing tech company! We value innovation, collaboration, and work-life balance. Join our mission to transform digital experiences in Southeast Asia.`,
         posted_date: new Date(now.getTime() - (i * 3 * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://www.hiredly.com/jobs/${Date.now()}-${i}`,
+        original_url: `https://www.hiredly.com/jobs/search?q=${encodeURIComponent(keyword)}`,
         source_platform: platform,
         experience_level: ['Entry Level', 'Mid Level', 'Entry Level', 'Senior'][i % 4],
         logo_url: undefined,

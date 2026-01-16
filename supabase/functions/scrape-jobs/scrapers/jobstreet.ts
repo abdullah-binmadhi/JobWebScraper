@@ -187,7 +187,7 @@ function generateSampleJobs(keyword: string, platform: string, filters: Filters)
         salary_period: 'month',
         description: `We are seeking a talented ${keyword} professional to join our team. This is an exciting opportunity to work on cutting-edge projects and grow your career. Requirements include strong analytical skills, excellent communication, and a passion for innovation.`,
         posted_date: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://www.jobstreet.com.my/job/${Date.now()}-${i}`,
+        original_url: `https://www.jobstreet.com.my/jobs?keywords=${encodeURIComponent(keyword)}`,
         source_platform: platform,
         experience_level: ['Entry Level', 'Mid Level', 'Senior', 'Entry Level', 'Mid Level'][i % 5],
     }))
