@@ -123,12 +123,12 @@ function generateLinkedInJobs(keyword: string, filters: Filters): JobListing[] {
 
     // Fortune 500 and well-known companies for realistic LinkedIn data
     const companies = [
-        { name: 'Microsoft Malaysia', logo: 'https://logo.clearbit.com/microsoft.com' },
-        { name: 'Google Cloud', logo: 'https://logo.clearbit.com/google.com' },
-        { name: 'Amazon Web Services', logo: 'https://logo.clearbit.com/aws.amazon.com' },
-        { name: 'Petronas Digital', logo: 'https://logo.clearbit.com/petronas.com' },
-        { name: 'CIMB Group', logo: 'https://logo.clearbit.com/cimb.com' },
-        { name: 'Maybank', logo: 'https://logo.clearbit.com/maybank.com' },
+        { name: 'Microsoft Malaysia', logo: 'https://ui-avatars.com/api/?name=Microsoft+Malaysia&background=random' },
+        { name: 'Google Cloud', logo: 'https://ui-avatars.com/api/?name=Google+Cloud&background=random' },
+        { name: 'Amazon Web Services', logo: 'https://ui-avatars.com/api/?name=AWS&background=random' },
+        { name: 'Petronas Digital', logo: 'https://ui-avatars.com/api/?name=Petronas&background=random' },
+        { name: 'CIMB Group', logo: 'https://ui-avatars.com/api/?name=CIMB&background=random' },
+        { name: 'Maybank', logo: 'https://ui-avatars.com/api/?name=Maybank&background=random' },
     ]
 
     const locations = [
