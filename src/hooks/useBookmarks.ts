@@ -83,18 +83,43 @@ export function useBookmarks(userId?: string) {
         }
     }
 
-    // Update bookmark status
+    // Update bookmark status (or add if not exists)
     const updateStatus = useMutation({
-        mutationFn: async ({ bookmarkId, status }: { bookmarkId: string; status: string }) => {
-            const { data, error } = await supabase
+        mutationFn: async ({ jobId, status }: { jobId: string; status: string }) => {
+            if (!userId) throw new Error('User not authenticated')
+
+            // Check if exists
+            const { data: existing } = await supabase
                 .from('bookmarked_jobs')
-                .update({ status } as never)
-                .eq('id', bookmarkId)
-                .select()
+                .select('id')
+                .eq('user_id', userId)
+                .eq('job_listing_id', jobId)
                 .single()
 
-            if (error) throw error
-            return data
+            let result
+            if (existing) {
+                const { data, error } = await supabase
+                    .from('bookmarked_jobs')
+                    .update({ status } as never)
+                    .eq('id', existing.id)
+                    .select()
+                    .single()
+                if (error) throw error
+                result = data
+            } else {
+                const { data, error } = await supabase
+                    .from('bookmarked_jobs')
+                    .insert({
+                        user_id: userId,
+                        job_listing_id: jobId,
+                        status: status,
+                    } as never)
+                    .select()
+                    .single()
+                if (error) throw error
+                result = data
+            }
+            return result
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['bookmarks', userId] })
@@ -107,7 +132,8 @@ export function useBookmarks(userId?: string) {
         isLoading,
         error: error instanceof Error ? error.message : null,
         toggleBookmark,
+        markAsApplied: (jobId: string) => updateStatus.mutate({ jobId, status: 'applied' }),
         updateStatus: updateStatus.mutate,
-        isToggling: addBookmark.isPending || removeBookmark.isPending,
+        isToggling: addBookmark.isPending || removeBookmark.isPending || updateStatus.isPending,
     }
 }

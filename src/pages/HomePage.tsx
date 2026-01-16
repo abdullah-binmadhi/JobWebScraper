@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SearchBar } from '@/components/search/SearchBar'
 import { PlatformSelector } from '@/components/search/PlatformSelector'
 import { FilterPanel } from '@/components/search/FilterPanel'
 import { JobList } from '@/components/jobs/JobList'
 import { JobDetail } from '@/components/jobs/JobDetail'
 import { useJobSearch } from '@/hooks/useJobSearch'
+import { useBookmarks } from '@/hooks/useBookmarks'
 import { PLATFORMS } from '@/lib/constants'
 import type { SearchFilters, JobListing } from '@/types'
 import { Sparkles, Zap, Shield, Globe } from 'lucide-react'
@@ -17,8 +18,20 @@ export function HomePage() {
     const [selectedJob, setSelectedJob] = useState<JobListing | null>(null)
     const [hasSearched, setHasSearched] = useState(false)
     const [lastSearch, setLastSearch] = useState<{ keywords: string[], platforms: string[] } | null>(null)
+    const [userId, setUserId] = useState<string>('')
+
+    // Initialize guest user ID
+    useEffect(() => {
+        let id = localStorage.getItem('job_scraper_guest_id')
+        if (!id) {
+            id = crypto.randomUUID()
+            localStorage.setItem('job_scraper_guest_id', id)
+        }
+        setUserId(id)
+    }, [])
 
     const { search, results, isLoading, error } = useJobSearch()
+    const { toggleBookmark, markAsApplied, bookmarkedIds } = useBookmarks(userId)
 
     const handlePlatformToggle = (platform: string) => {
         setSelectedPlatforms((prev) => {
@@ -100,6 +113,8 @@ export function HomePage() {
                                     jobs={results}
                                     isLoading={isLoading}
                                     error={error}
+                                    bookmarkedIds={bookmarkedIds}
+                                    onBookmark={toggleBookmark}
                                     onJobClick={setSelectedJob}
                                     onRetry={() => lastSearch && handleSearch(lastSearch.keywords, lastSearch.platforms)}
                                 />
@@ -147,6 +162,9 @@ export function HomePage() {
                 job={selectedJob}
                 open={!!selectedJob}
                 onOpenChange={(open) => !open && setSelectedJob(null)}
+                isBookmarked={selectedJob ? bookmarkedIds.has(selectedJob.id) : false}
+                onBookmark={toggleBookmark}
+                onMarkApplied={markAsApplied}
             />
         </div>
     )

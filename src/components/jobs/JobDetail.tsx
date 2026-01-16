@@ -28,6 +28,7 @@ interface JobDetailProps {
     onOpenChange: (open: boolean) => void
     isBookmarked?: boolean
     onBookmark?: (jobId: string) => void
+    onMarkApplied?: (jobId: string) => void
 }
 
 export function JobDetail({
@@ -36,12 +37,13 @@ export function JobDetail({
     onOpenChange,
     isBookmarked = false,
     onBookmark,
+    onMarkApplied,
 }: JobDetailProps) {
     if (!job) return null
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[85vh] p-0">
+            <DialogContent className="fixed left-[50%] top-[50%] z-[100] grid w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white dark:bg-slate-950 p-0 shadow-lg duration-200 sm:rounded-lg">
                 <ScrollArea className="max-h-[85vh]">
                     <div className="p-6">
                         <DialogHeader className="space-y-4">
@@ -201,14 +203,24 @@ export function JobDetail({
                                 </div>
                             )}
 
-                            {/* Apply Button */}
-                            <div className="pt-4 border-t border-border">
+                            {/* Actions */}
+                            <div className="pt-4 border-t border-border flex flex-col gap-3">
                                 <Button asChild className="w-full" size="lg">
                                     <a href={job.original_url} target="_blank" rel="noopener noreferrer">
-                                        Apply on {job.source_platform}
+                                        Continue to Application
                                         <ExternalLink className="ml-2 h-4 w-4" />
                                     </a>
                                 </Button>
+                                {onMarkApplied && (
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        onClick={() => onMarkApplied(job.id)}
+                                        className="w-full"
+                                    >
+                                        I have applied for this job
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
