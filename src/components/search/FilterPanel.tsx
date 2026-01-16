@@ -1,10 +1,11 @@
+import { useState, useEffect } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { JOB_TYPES, EXPERIENCE_LEVELS, WORK_ARRANGEMENTS } from '@/lib/constants'
 import type { SearchFilters } from '@/types'
-import { Filter, X } from 'lucide-react'
+import { Filter, X, Check } from 'lucide-react'
 
 interface FilterPanelProps {
     filters: SearchFilters
@@ -13,28 +14,42 @@ interface FilterPanelProps {
 }
 
 export function FilterPanel({ filters, onFilterChange, disabled = false }: FilterPanelProps) {
+    // Local state to hold changes before applying
+    const [localFilters, setLocalFilters] = useState<SearchFilters>(filters)
+
+    // Sync local state when prop changes (e.g., reset)
+    useEffect(() => {
+        setLocalFilters(filters)
+    }, [filters])
+
     const updateArrayFilter = (
         key: 'jobType' | 'experienceLevel' | 'workArrangement',
         value: string,
         checked: boolean
     ) => {
-        const currentArray = filters[key] || []
+        const currentArray = localFilters[key] || []
         const newArray = checked
             ? [...currentArray, value]
             : currentArray.filter((v) => v !== value)
-        onFilterChange({ ...filters, [key]: newArray.length > 0 ? newArray : undefined })
+        setLocalFilters({ ...localFilters, [key]: newArray.length > 0 ? newArray : undefined })
     }
 
     const clearFilters = () => {
-        onFilterChange({})
+        const emptyFilters = {}
+        setLocalFilters(emptyFilters)
+        onFilterChange(emptyFilters)
+    }
+
+    const applyFilters = () => {
+        onFilterChange(localFilters)
     }
 
     const hasActiveFilters =
-        (filters.jobType?.length ?? 0) > 0 ||
-        (filters.experienceLevel?.length ?? 0) > 0 ||
-        (filters.workArrangement?.length ?? 0) > 0 ||
-        filters.location ||
-        filters.salaryMin
+        (localFilters.jobType?.length ?? 0) > 0 ||
+        (localFilters.experienceLevel?.length ?? 0) > 0 ||
+        (localFilters.workArrangement?.length ?? 0) > 0 ||
+        localFilters.location ||
+        localFilters.salaryMin
 
     return (
         <div className="space-y-6 p-5 bg-card rounded-xl border border-border">
@@ -62,9 +77,9 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                 <Label className="text-sm font-medium">Location</Label>
                 <Input
                     placeholder="e.g., Kuala Lumpur"
-                    value={filters.location || ''}
+                    value={localFilters.location || ''}
                     onChange={(e) =>
-                        onFilterChange({ ...filters, location: e.target.value || undefined })
+                        setLocalFilters({ ...localFilters, location: e.target.value || undefined })
                     }
                     disabled={disabled}
                     className="h-9"
@@ -79,7 +94,7 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                         <div key={type} className="flex items-center space-x-2">
                             <Checkbox
                                 id={`job-type-${type}`}
-                                checked={filters.jobType?.includes(type) ?? false}
+                                checked={localFilters.jobType?.includes(type) ?? false}
                                 onCheckedChange={(checked) =>
                                     updateArrayFilter('jobType', type, !!checked)
                                 }
@@ -104,7 +119,7 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                         <div key={level} className="flex items-center space-x-2">
                             <Checkbox
                                 id={`exp-level-${level}`}
-                                checked={filters.experienceLevel?.includes(level) ?? false}
+                                checked={localFilters.experienceLevel?.includes(level) ?? false}
                                 onCheckedChange={(checked) =>
                                     updateArrayFilter('experienceLevel', level, !!checked)
                                 }
@@ -129,7 +144,7 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                         <div key={arrangement} className="flex items-center space-x-2">
                             <Checkbox
                                 id={`work-arr-${arrangement}`}
-                                checked={filters.workArrangement?.includes(arrangement) ?? false}
+                                checked={localFilters.workArrangement?.includes(arrangement) ?? false}
                                 onCheckedChange={(checked) =>
                                     updateArrayFilter('workArrangement', arrangement, !!checked)
                                 }
@@ -152,10 +167,10 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                 <Input
                     type="number"
                     placeholder="e.g., 3000"
-                    value={filters.salaryMin || ''}
+                    value={localFilters.salaryMin || ''}
                     onChange={(e) =>
-                        onFilterChange({
-                            ...filters,
+                        setLocalFilters({
+                            ...localFilters,
                             salaryMin: e.target.value ? parseInt(e.target.value) : undefined,
                         })
                     }
@@ -163,6 +178,11 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
                     className="h-9"
                 />
             </div>
+
+            <Button onClick={applyFilters} className="w-full" disabled={disabled}>
+                <Check className="mr-2 h-4 w-4" />
+                Apply Filters
+            </Button>
         </div>
     )
 }

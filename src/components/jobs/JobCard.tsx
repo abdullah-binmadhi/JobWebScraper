@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,8 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onBookmark, isBookmarked = false, onClick }: JobCardProps) {
+    const [imgError, setImgError] = useState(false)
+
     const handleBookmarkClick = (e: React.MouseEvent) => {
         e.stopPropagation()
         onBookmark?.(job.id)
@@ -38,25 +41,22 @@ export function JobCard({ job, onBookmark, isBookmarked = false, onClick }: JobC
             <div className="flex gap-4">
                 {/* Company Logo */}
                 <div className="flex-shrink-0">
-                    {job.logo_url ? (
+                    {!imgError && job.logo_url ? (
                         <img
                             src={job.logo_url}
                             alt={job.company_name}
                             className="w-14 h-14 rounded-lg object-contain bg-muted p-1"
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none'
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden')
-                            }}
+                            onError={() => setImgError(true)}
                         />
-                    ) : null}
-                    <div
-                        className={cn(
-                            'w-14 h-14 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center',
-                            job.logo_url && 'hidden'
-                        )}
-                    >
-                        <Building2 className="h-6 w-6 text-primary" />
-                    </div>
+                    ) : (
+                        <div
+                            className={cn(
+                                'w-14 h-14 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center'
+                            )}
+                        >
+                            <Building2 className="h-6 w-6 text-primary" />
+                        </div>
+                    )}
                 </div>
 
                 {/* Job Details */}
