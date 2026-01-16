@@ -94,13 +94,13 @@ export function useBookmarks(userId?: string) {
                 .select('id')
                 .eq('user_id', userId)
                 .eq('job_listing_id', jobId)
-                .single()
+                .maybeSingle()
 
             let result
             if (existing) {
                 const { data, error } = await supabase
                     .from('bookmarked_jobs')
-                    .update({ status } as never)
+                    .update({ status: status })
                     .eq('id', existing.id)
                     .select()
                     .single()
@@ -113,7 +113,7 @@ export function useBookmarks(userId?: string) {
                         user_id: userId,
                         job_listing_id: jobId,
                         status: status,
-                    } as never)
+                    })
                     .select()
                     .single()
                 if (error) throw error
