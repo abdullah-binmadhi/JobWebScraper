@@ -41,12 +41,63 @@ export async function scrapeLinkedIn(
     filters: Filters
 ): Promise<JobListing[]> {
     const jobs: JobListing[] = []
+    const apiKey = Deno.env.get('RAPIDAPI_KEY') || '9fb28bbeecmshbf041cfbea56022p1c0095jsnf30aa8808d68'
 
-    // Generate sample LinkedIn-style job postings
-    // In production, you would use LinkedIn's official APIs
     for (const keyword of keywords) {
-        console.log(`[LinkedIn] Generating sample jobs for: ${keyword}`)
-        jobs.push(...generateLinkedInJobs(keyword, filters))
+        try {
+            console.log(`Fetching LinkedIn via RapidAPI for: ${keyword}`)
+
+            // Using the LinkedIn Data API search endpoint
+            const response = await fetch('https://linkedin-data-api.p.rapidapi.com/search-jobs', {
+                method: 'GET',
+                headers: {
+                    'x-api-host': 'linkedin-data-api.p.rapidapi.com',
+                    'x-api-key': apiKey,
+                },
+                params: new URLSearchParams({
+                    keywords: keyword,
+                    locationId: filters.location || 'Malaysia',
+                })
+            })
+
+            if (!response.ok) {
+                console.error(`RapidAPI LinkedIn returned status ${response.status}`)
+                jobs.push(...generateLinkedInJobs(keyword, filters))
+                continue
+            }
+
+            const data = await response.json()
+            // This API usually returns data in data.items or similar
+            const apiJobs = data.items || data.data || data.results || []
+
+            if (apiJobs.length > 0) {
+                apiJobs.forEach((job: any) => {
+                    jobs.push({
+                        job_title: job.title || 'Untitled',
+                        company_name: job.company?.name || job.companyName || 'Unknown',
+                        location: job.location || filters.location,
+                        job_type: job.type || job.employmentType,
+                        work_arrangement: job.workType || 'On-site',
+                        salary_min: job.salaryMin,
+                        salary_max: job.salaryMax,
+                        salary_currency: 'MYR',
+                        salary_period: 'month',
+                        description: job.description || job.snippet,
+                        posted_date: job.postedAt || job.postDate,
+                        original_url: job.url || job.link,
+                        source_platform: 'linkedin',
+                        logo_url: job.company?.logo || job.logo,
+                        experience_level: job.experienceLevel,
+                    })
+                })
+            } else {
+                jobs.push(...generateLinkedInJobs(keyword, filters))
+            }
+
+        } catch (error) {
+            console.error(`Error with RapidAPI LinkedIn for "${keyword}":`, error)
+            jobs.push(...generateLinkedInJobs(keyword, filters))
+        }
     }
 
     return filterJobs(jobs, filters)
