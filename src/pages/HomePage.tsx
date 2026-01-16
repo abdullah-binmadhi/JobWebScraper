@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { SearchBar } from '@/components/search/SearchBar'
 import { PlatformSelector } from '@/components/search/PlatformSelector'
 import { FilterPanel } from '@/components/search/FilterPanel'
@@ -6,11 +7,13 @@ import { JobList } from '@/components/jobs/JobList'
 import { JobDetail } from '@/components/jobs/JobDetail'
 import { useJobSearch } from '@/hooks/useJobSearch'
 import { useBookmarks } from '@/hooks/useBookmarks'
+import { supabase } from '@/lib/supabase'
 import { PLATFORMS } from '@/lib/constants'
 import type { SearchFilters, JobListing } from '@/types'
 import { Sparkles, Zap, Shield, Globe } from 'lucide-react'
 
 export function HomePage() {
+    const navigate = useNavigate()
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
         PLATFORMS.map((p) => p.id)
     )
@@ -55,6 +58,28 @@ export function HomePage() {
         if (lastSearch) {
             search(lastSearch.keywords, lastSearch.platforms, newFilters)
         }
+    }
+
+    const handleAutoApply = async (job: JobListing) => {
+        if (!userId) return
+
+        // Check if profile exists
+        const { count } = await supabase
+            .from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+
+        if (count === 0) {
+            if (confirm('You need to set up your profile and resume first to use Auto-Apply. Go to Profile?')) {
+                navigate('/profile')
+            }
+            return
+        }
+
+        // Trigger n8n webhook (Mock)
+        // In a real implementation: fetch('https://n8n.your-domain.com/webhook/auto-apply', { body: { userId, jobUrl: job.original_url } })
+        console.log('Triggering Auto-Apply for:', job.job_title)
+        alert(`AI Agent started! 🤖\n\nI am now reading the job description for "${job.job_title}" and will navigate to ${job.source_platform} to apply using your uploaded resume.\n\n(This is a demo of the n8n integration)`)
     }
 
     return (
@@ -165,6 +190,7 @@ export function HomePage() {
                 isBookmarked={selectedJob ? bookmarkedIds.has(selectedJob.id) : false}
                 onBookmark={toggleBookmark}
                 onMarkApplied={markAsApplied}
+                onAutoApply={handleAutoApply}
             />
         </div>
     )

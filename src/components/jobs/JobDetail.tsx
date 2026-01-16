@@ -22,6 +22,10 @@ import {
 import { cn, formatSalary, formatRelativeDate, getPlatformColor } from '@/lib/utils'
 import type { JobListing } from '@/types'
 
+import {
+    Sparkles,
+} from 'lucide-react'
+
 interface JobDetailProps {
     job: JobListing | null
     open: boolean
@@ -29,6 +33,7 @@ interface JobDetailProps {
     isBookmarked?: boolean
     onBookmark?: (jobId: string) => void
     onMarkApplied?: (jobId: string) => void
+    onAutoApply?: (job: JobListing) => void
 }
 
 export function JobDetail({
@@ -38,6 +43,7 @@ export function JobDetail({
     isBookmarked = false,
     onBookmark,
     onMarkApplied,
+    onAutoApply,
 }: JobDetailProps) {
     if (!job) return null
 
@@ -47,6 +53,7 @@ export function JobDetail({
                 <ScrollArea className="max-h-[85vh]">
                     <div className="p-6">
                         <DialogHeader className="space-y-4">
+                            {/* ... existing header code ... */}
                             <div className="flex items-start gap-4">
                                 {/* Company Logo */}
                                 <div className="flex-shrink-0">
@@ -205,22 +212,33 @@ export function JobDetail({
 
                             {/* Actions */}
                             <div className="pt-4 border-t border-border flex flex-col gap-3">
-                                <Button asChild className="w-full" size="lg">
-                                    <a href={job.original_url} target="_blank" rel="noopener noreferrer">
-                                        Continue to Application
-                                        <ExternalLink className="ml-2 h-4 w-4" />
-                                    </a>
-                                </Button>
-                                {onMarkApplied && (
-                                    <Button
-                                        variant="outline"
+                                {onAutoApply && (
+                                    <Button 
+                                        onClick={() => onAutoApply(job)}
+                                        className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0"
                                         size="lg"
-                                        onClick={() => onMarkApplied(job.id)}
-                                        className="w-full"
                                     >
-                                        I have applied for this job
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        Auto-Apply with AI
                                     </Button>
                                 )}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button asChild variant="outline" size="lg">
+                                        <a href={job.original_url} target="_blank" rel="noopener noreferrer">
+                                            Visit Site
+                                            <ExternalLink className="ml-2 h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                    {onMarkApplied && (
+                                        <Button
+                                            variant="secondary"
+                                            size="lg"
+                                            onClick={() => onMarkApplied(job.id)}
+                                        >
+                                            Mark Applied
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

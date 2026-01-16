@@ -42,41 +42,34 @@ export interface SavedSearch {
     is_active: boolean
 }
 
-// Bookmarked Job type
 export interface BookmarkedJob {
     id: string
     user_id: string
     job_listing_id: string
-    notes: string | null
-    status: 'saved' | 'applied' | 'interviewing' | 'rejected' | 'accepted'
+    notes?: string
+    status: 'saved' | 'applied' | 'interviewing' | 'rejected' | 'offered'
     created_at: string
-    job_listing?: JobListing
 }
 
-// Scrape Log type
-export interface ScrapeLog {
+export interface UserProfile {
     id: string
-    user_id: string | null
-    search_query: {
-        keywords: string[]
-        filters: SearchFilters
-    }
-    platforms_scraped: string[]
-    total_results: number | null
-    status: 'success' | 'partial' | 'failed'
-    error_message: string | null
-    execution_time_ms: number | null
-    created_at: string
+    user_id: string
+    full_name: string
+    email: string
+    phone?: string
+    linkedin_url?: string
+    portfolio_url?: string
+    resume_url?: string
+    skills?: string[]
+    experience_summary?: string
 }
 
-// Search Filters
 export interface SearchFilters {
     jobType?: string[]
-    location?: string
+    location?: string // Enforced to 'Kuala Lumpur'
     experienceLevel?: string[]
     workArrangement?: string[]
     salaryMin?: number
-    salaryMax?: number
 }
 
 // Search Request

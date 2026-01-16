@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer'
 import { HomePage } from '@/pages/HomePage'
 import { BookmarksPage } from '@/pages/BookmarksPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import './index.css'
 
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/bookmarks" element={<BookmarksPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
               </Routes>
             </main>
             <Footer />

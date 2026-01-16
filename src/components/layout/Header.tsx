@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Search, Bookmark, LayoutDashboard, Menu, X, Moon, Sun } from 'lucide-react'
+import { Search, Bookmark, LayoutDashboard, Menu, X, Moon, Sun, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
@@ -33,6 +33,7 @@ export function Header() {
         { href: '/', label: 'Search', icon: Search },
         { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/profile', label: 'Profile', icon: User },
     ]
 
     const isActive = (path: string) => location.pathname === path
