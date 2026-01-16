@@ -3,10 +3,11 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { JOB_TYPES, EXPERIENCE_LEVELS, WORK_ARRANGEMENTS } from '@/lib/constants'
 import type { SearchFilters } from '@/types'
-import { Filter, X, Check } from 'lucide-react'
+import { Filter, X, Check, MapPin } from 'lucide-react'
 
 interface FilterPanelProps {
     filters: SearchFilters
@@ -16,11 +17,15 @@ interface FilterPanelProps {
 
 export function FilterPanel({ filters, onFilterChange, disabled = false }: FilterPanelProps) {
     // Local state to hold changes before applying
-    const [localFilters, setLocalFilters] = useState<SearchFilters>(filters)
+    // Ensure Kuala Lumpur is always the default location
+    const [localFilters, setLocalFilters] = useState<SearchFilters>({
+        ...filters,
+        location: 'Kuala Lumpur',
+    })
 
     // Sync local state when prop changes (e.g., reset)
     useEffect(() => {
-        setLocalFilters(filters)
+        setLocalFilters({ ...filters, location: 'Kuala Lumpur' })
     }, [filters])
 
     const updateArrayFilter = (
@@ -36,61 +41,57 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
     }
 
     const clearFilters = () => {
-        const emptyFilters = {}
+        // Reset to default state, but keep Location as Kuala Lumpur
+        const emptyFilters = { location: 'Kuala Lumpur' }
         setLocalFilters(emptyFilters)
         onFilterChange(emptyFilters)
     }
 
     const applyFilters = () => {
-        onFilterChange(localFilters)
+        // Ensure location is set before applying
+        onFilterChange({ ...localFilters, location: 'Kuala Lumpur' })
     }
 
     const hasActiveFilters =
         (localFilters.jobType?.length ?? 0) > 0 ||
         (localFilters.experienceLevel?.length ?? 0) > 0 ||
         (localFilters.workArrangement?.length ?? 0) > 0 ||
-        localFilters.location ||
         localFilters.salaryMin
 
     return (
         <div className="flex flex-col max-h-[calc(100vh-8rem)] bg-card rounded-xl border border-border overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-border bg-card z-10">
-                <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-base font-semibold">Filters</h3>
+            <div className="flex flex-col gap-3 p-5 border-b border-border bg-card z-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-base font-semibold">Filters</h3>
+                    </div>
+                    {hasActiveFilters && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearFilters}
+                            disabled={disabled}
+                            className="text-muted-foreground hover:text-foreground h-8"
+                        >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                        </Button>
+                    )}
                 </div>
-                {hasActiveFilters && (
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearFilters}
-                        disabled={disabled}
-                        className="text-muted-foreground hover:text-foreground h-8"
-                    >
-                        <X className="h-3 w-3 mr-1" />
-                        Clear
-                    </Button>
-                )}
+                
+                {/* Fixed Location Indicator */}
+                <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border/50">
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-sm font-medium">Kuala Lumpur</span>
+                    <Badge variant="secondary" className="ml-auto text-[10px] h-5">Fixed</Badge>
+                </div>
             </div>
 
             {/* Scrollable Content */}
             <ScrollArea className="flex-1">
                 <div className="space-y-6 p-5">
-                    {/* Location */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">Location</Label>
-                        <Input
-                            placeholder="e.g., Kuala Lumpur"
-                            value={localFilters.location || ''}
-                            onChange={(e) =>
-                                setLocalFilters({ ...localFilters, location: e.target.value || undefined })
-                            }
-                            disabled={disabled}
-                            className="h-9"
-                        />
-                    </div>
-
                     {/* Job Type */}
                     <div className="space-y-3">
                         <Label className="text-sm font-medium">Job Type</Label>

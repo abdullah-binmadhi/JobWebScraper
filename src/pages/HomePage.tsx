@@ -13,9 +13,10 @@ export function HomePage() {
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
         PLATFORMS.map((p) => p.id)
     )
-    const [filters, setFilters] = useState<SearchFilters>({})
+    const [filters, setFilters] = useState<SearchFilters>({ location: 'Kuala Lumpur' })
     const [selectedJob, setSelectedJob] = useState<JobListing | null>(null)
     const [hasSearched, setHasSearched] = useState(false)
+    const [lastSearch, setLastSearch] = useState<{ keywords: string[], platforms: string[] } | null>(null)
 
     const { search, results, isLoading, error } = useJobSearch()
 
@@ -32,7 +33,15 @@ export function HomePage() {
 
     const handleSearch = (keywords: string[], platforms: string[]) => {
         setHasSearched(true)
+        setLastSearch({ keywords, platforms })
         search(keywords, platforms, filters)
+    }
+
+    const handleFilterChange = (newFilters: SearchFilters) => {
+        setFilters(newFilters)
+        if (lastSearch) {
+            search(lastSearch.keywords, lastSearch.platforms, newFilters)
+        }
     }
 
     return (
@@ -79,7 +88,7 @@ export function HomePage() {
                                 <div className="sticky top-20">
                                     <FilterPanel
                                         filters={filters}
-                                        onFilterChange={setFilters}
+                                        onFilterChange={handleFilterChange}
                                         disabled={isLoading}
                                     />
                                 </div>
@@ -92,7 +101,7 @@ export function HomePage() {
                                     isLoading={isLoading}
                                     error={error}
                                     onJobClick={setSelectedJob}
-                                    onRetry={() => handleSearch([], selectedPlatforms)}
+                                    onRetry={() => lastSearch && handleSearch(lastSearch.keywords, lastSearch.platforms)}
                                 />
                             </main>
                         </div>
