@@ -47,6 +47,7 @@ export function JobCard({ job, onBookmark, isBookmarked = false, onClick }: JobC
                             alt={job.company_name}
                             className="w-14 h-14 rounded-lg object-contain bg-muted p-1"
                             onError={() => setImgError(true)}
+                            referrerPolicy="no-referrer"
                         />
                     ) : (
                         <div
