@@ -88,8 +88,12 @@ export function useBookmarks(userId?: string) {
         mutationFn: async ({ jobId, status }: { jobId: string; status: string }) => {
             if (!userId) throw new Error('User not authenticated')
 
+            // Cast supabase to any to bypass type inference issues
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const sb = supabase as any
+
             // Check if exists
-            const { data: existing } = await supabase
+            const { data: existing } = await sb
                 .from('bookmarked_jobs')
                 .select('id')
                 .eq('user_id', userId)
@@ -98,7 +102,7 @@ export function useBookmarks(userId?: string) {
 
             let result
             if (existing) {
-                const { data, error } = await supabase
+                const { data, error } = await sb
                     .from('bookmarked_jobs')
                     .update({ status: status })
                     .eq('id', existing.id)
@@ -107,7 +111,7 @@ export function useBookmarks(userId?: string) {
                 if (error) throw error
                 result = data
             } else {
-                const { data, error } = await supabase
+                const { data, error } = await sb
                     .from('bookmarked_jobs')
                     .insert({
                         user_id: userId,
