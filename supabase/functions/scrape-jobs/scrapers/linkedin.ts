@@ -131,44 +131,42 @@ function generateLinkedInJobs(keyword: string, filters: Filters): JobListing[] {
         { name: 'Maybank', logo: 'https://ui-avatars.com/api/?name=Maybank&background=random' },
     ]
 
-    const locations = [
-        'Kuala Lumpur, Malaysia',
-        'Petaling Jaya, Selangor',
-        'Cyberjaya, Malaysia',
-        'Penang, Malaysia',
-        'Singapore (Remote)',
-    ]
-
-    const jobTypes = ['Full-time', 'Contract', 'Full-time', 'Internship']
-    const arrangements = ['Hybrid', 'Remote', 'On-site', 'Hybrid']
-    const levels = ['Entry Level', 'Mid Level', 'Senior', 'Entry Level']
-
-    const jobTitles = [
-        `${keyword} Engineer`,
-        `Senior ${keyword}`,
-        `${keyword} Analyst`,
-        `${keyword} Intern`,
-    ]
+    const isInternship = filters.jobType?.some(t => t.toLowerCase().includes('intern'))
+    const jobType = isInternship ? 'Internship' : (filters.jobType?.[0] || 'Full-time')
 
     return Array.from({ length: 4 }, (_, i) => {
         const company = companies[i % companies.length]
+        
+        let salaryMin, salaryMax
+        if (jobType === 'Internship') {
+            salaryMin = 1000 + (i * 200)
+            salaryMax = 2000 + (i * 200)
+        } else {
+            salaryMin = 4000 + (i * 2000)
+            salaryMax = 8000 + (i * 3000)
+        }
+
+        const baseTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1)
+        const suffix = isInternship ? 'Intern' : ['Engineer', 'Senior', 'Analyst', 'Lead'][i % 4]
+        const jobTitle = suffix === 'Senior' ? `Senior ${baseTitle}` : `${baseTitle} ${suffix}`
 
         return {
-            job_title: jobTitles[i],
+            job_title: jobTitle,
             company_name: company.name,
-            location: filters.location || locations[i % locations.length],
-            job_type: filters.jobType?.[0] || jobTypes[i],
-            work_arrangement: arrangements[i],
-            salary_min: 4000 + (i * 2000),
-            salary_max: 8000 + (i * 3000),
+            location: 'Kuala Lumpur',
+            job_type: jobType,
+            work_arrangement: ['Hybrid', 'Remote', 'On-site'][i % 3],
+            salary_min: salaryMin,
+            salary_max: salaryMax,
             salary_currency: 'MYR',
             salary_period: 'month',
-            description: `${company.name} is looking for a talented ${jobTitles[i]} to join our growing team. You will work on impactful projects, collaborate with world-class engineers, and have opportunities for professional growth. We offer competitive compensation, flexible work arrangements, and comprehensive benefits.`,
-            requirements: `• Bachelor's degree in relevant field\n• ${i + 1}+ years of experience in ${keyword}\n• Strong analytical and problem-solving skills\n• Excellent communication abilities`,
+            description: `${company.name} is looking for a talented ${jobTitle} to join our growing team. You will work on impactful projects, collaborate with world-class engineers, and have opportunities for professional growth. We offer competitive compensation, flexible work arrangements, and comprehensive benefits.`,
+            requirements: `• Bachelor's degree in relevant field\n• ${isInternship ? '0-1' : '3+'} years of experience in ${keyword}\n• Strong analytical and problem-solving skills\n• Excellent communication abilities`,
             posted_date: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)).toISOString(),
-            original_url: `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(keyword)}`,
+            // Google Search fallback link
+            original_url: `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${company.name} LinkedIn`)}`,
             source_platform: 'linkedin',
-            experience_level: levels[i],
+            experience_level: isInternship ? 'Entry Level' : 'Mid Level',
             logo_url: company.logo,
         }
     })

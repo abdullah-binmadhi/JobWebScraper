@@ -174,24 +174,43 @@ function delay(ms: number): Promise<void> {
 function generateSampleJobs(keyword: string, platform: string, filters: Filters): JobListing[] {
     const now = new Date()
     const companies = ['Acme Corporation', 'BlueTech Solutions', 'DataCorp Malaysia', 'Excel Industries', 'Future Systems']
-    const locations = ['Kuala Lumpur', 'Selangor', 'Penang', 'Johor', 'Sabah']
-    const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
-    const arrangements = ['Remote', 'Hybrid', 'On-site']
+    const locations = ['Kuala Lumpur']
+    
+    const isInternship = filters.jobType?.some(t => t.toLowerCase().includes('intern'))
+    const jobType = isInternship ? 'Internship' : (filters.jobType?.[0] || 'Full-time')
 
-    return Array.from({ length: 4 }, (_, i) => ({
-        job_title: `${['Junior', 'Senior', '', 'Lead', 'Associate'][i % 5]} ${keyword}`,
-        company_name: companies[i % companies.length],
-        location: filters.location || locations[i % locations.length],
-        job_type: filters.jobType?.[0] || jobTypes[i % jobTypes.length],
-        work_arrangement: arrangements[i % arrangements.length],
-        salary_min: 2500 + (i * 800),
-        salary_max: 4500 + (i * 1200),
-        salary_currency: 'MYR',
-        salary_period: 'month',
-        description: `Join our dynamic team as a ${keyword}! We offer competitive benefits, career growth opportunities, and a collaborative work environment. Looking for motivated individuals with strong problem-solving skills.`,
-        posted_date: new Date(now.getTime() - (i * 2 * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://my.indeed.com/jobs?q=${encodeURIComponent(keyword)}`,
-        source_platform: platform,
-        experience_level: ['Entry Level', 'Senior', 'Mid Level', 'Entry Level', 'Mid Level'][i % 5],
-    }))
+    return Array.from({ length: 4 }, (_, i) => {
+        const company = companies[i % companies.length]
+        
+        let salaryMin, salaryMax
+        if (jobType === 'Internship') {
+            salaryMin = 600 + (i * 100)
+            salaryMax = 1200 + (i * 150)
+        } else {
+            salaryMin = 2800 + (i * 800)
+            salaryMax = 4000 + (i * 1200)
+        }
+
+        const baseTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1)
+        const suffix = isInternship ? 'Intern' : ['Executive', 'Associate', 'Analyst'][i % 3]
+        const jobTitle = `${baseTitle} ${suffix}`
+
+        return {
+            job_title: jobTitle,
+            company_name: company,
+            location: 'Kuala Lumpur',
+            job_type: jobType,
+            work_arrangement: ['Remote', 'Hybrid', 'On-site'][i % 3],
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            salary_currency: 'MYR',
+            salary_period: 'month',
+            description: `Join our dynamic team as a ${jobTitle}! We offer competitive benefits, career growth opportunities, and a collaborative work environment. Looking for motivated individuals.`,
+            posted_date: new Date(now.getTime() - (i * 2 * 24 * 60 * 60 * 1000)).toISOString(),
+            // Google Search fallback link
+            original_url: `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${company} Indeed Malaysia`)}`,
+            source_platform: platform,
+            experience_level: isInternship ? 'Entry Level' : 'Mid Level',
+        }
+    })
 }

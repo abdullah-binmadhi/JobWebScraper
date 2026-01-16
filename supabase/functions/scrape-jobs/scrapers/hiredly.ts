@@ -135,25 +135,44 @@ function delay(ms: number): Promise<void> {
 function generateSampleJobs(keyword: string, platform: string, filters: Filters): JobListing[] {
     const now = new Date()
     const companies = ['Grab Malaysia', 'Lazada', 'Touch n Go', 'Fave', 'Carsome']
-    const locations = ['Kuala Lumpur', 'Mont Kiara', 'Bangsar South', 'KLCC', 'Damansara']
-    const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
-    const arrangements = ['Hybrid', 'Remote', 'On-site']
+    const locations = ['Kuala Lumpur']
+    
+    const isInternship = filters.jobType?.some(t => t.toLowerCase().includes('intern'))
+    const jobType = isInternship ? 'Internship' : (filters.jobType?.[0] || 'Full-time')
 
-    return Array.from({ length: 4 }, (_, i) => ({
-        job_title: `${keyword} ${['Analyst', 'Executive', 'Coordinator', 'Specialist'][i % 4]}`,
-        company_name: companies[i % companies.length],
-        location: filters.location || locations[i % locations.length],
-        job_type: filters.jobType?.[0] || jobTypes[i % jobTypes.length],
-        work_arrangement: arrangements[i % arrangements.length],
-        salary_min: 3500 + (i * 1000),
-        salary_max: 5500 + (i * 1500),
-        salary_currency: 'MYR',
-        salary_period: 'month',
-        description: `Exciting opportunity to work as a ${keyword} at a fast-growing tech company! We value innovation, collaboration, and work-life balance. Join our mission to transform digital experiences in Southeast Asia.`,
-        posted_date: new Date(now.getTime() - (i * 3 * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://www.hiredly.com/jobs/search?q=${encodeURIComponent(keyword)}`,
-        source_platform: platform,
-        experience_level: ['Entry Level', 'Mid Level', 'Entry Level', 'Senior'][i % 4],
-        logo_url: undefined,
-    }))
+    return Array.from({ length: 4 }, (_, i) => {
+        const company = companies[i % companies.length]
+        
+        let salaryMin, salaryMax
+        if (jobType === 'Internship') {
+            salaryMin = 800 + (i * 150)
+            salaryMax = 1500 + (i * 200)
+        } else {
+            salaryMin = 3500 + (i * 1000)
+            salaryMax = 5500 + (i * 1500)
+        }
+
+        const baseTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1)
+        const suffix = isInternship ? 'Intern' : ['Executive', 'Coordinator', 'Specialist'][i % 3]
+        const jobTitle = `${baseTitle} ${suffix}`
+
+        return {
+            job_title: jobTitle,
+            company_name: company,
+            location: 'Kuala Lumpur',
+            job_type: jobType,
+            work_arrangement: ['Hybrid', 'Remote', 'On-site'][i % 3],
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            salary_currency: 'MYR',
+            salary_period: 'month',
+            description: `Exciting opportunity to work as a ${jobTitle} at a fast-growing tech company! We value innovation, collaboration, and work-life balance. Join our mission to transform digital experiences in Southeast Asia.`,
+            posted_date: new Date(now.getTime() - (i * 3 * 24 * 60 * 60 * 1000)).toISOString(),
+            // Google Search fallback link
+            original_url: `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${company} Hiredly Malaysia`)}`,
+            source_platform: platform,
+            experience_level: isInternship ? 'Entry Level' : 'Mid Level',
+            logo_url: undefined,
+        }
+    })
 }

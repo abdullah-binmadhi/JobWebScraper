@@ -171,24 +171,46 @@ function delay(ms: number): Promise<void> {
 function generateSampleJobs(keyword: string, platform: string, filters: Filters): JobListing[] {
     const now = new Date()
     const companies = ['Tech Solutions Sdn Bhd', 'Digital Ventures Malaysia', 'Innovation Labs', 'Global Systems MY', 'StartUp Hub KL']
-    const locations = ['Kuala Lumpur', 'Petaling Jaya', 'Cyberjaya', 'Penang', 'Johor Bahru']
-    const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship']
-    const arrangements = ['Remote', 'Hybrid', 'On-site']
+    const locations = ['Kuala Lumpur'] // Enforced Kuala Lumpur
+    
+    // Determine job properties based on filters to ensure accuracy
+    const isInternship = filters.jobType?.some(t => t.toLowerCase().includes('intern'))
+    const jobType = isInternship ? 'Internship' : (filters.jobType?.[0] || 'Full-time')
+    
+    return Array.from({ length: 5 }, (_, i) => {
+        const company = companies[i % companies.length]
+        
+        // Generate realistic salary based on job type
+        let salaryMin, salaryMax
+        if (jobType === 'Internship') {
+            salaryMin = 800 + (i * 100)
+            salaryMax = 1200 + (i * 200)
+        } else {
+            salaryMin = 3000 + (i * 1000)
+            salaryMax = 4500 + (i * 1500)
+        }
 
-    return Array.from({ length: 5 }, (_, i) => ({
-        job_title: `${keyword} ${['Specialist', 'Associate', 'Manager', 'Intern', 'Lead'][i % 5]}`,
-        company_name: companies[i % companies.length],
-        location: filters.location || locations[i % locations.length],
-        job_type: filters.jobType?.[0] || jobTypes[i % jobTypes.length],
-        work_arrangement: arrangements[i % arrangements.length],
-        salary_min: 3000 + (i * 1000),
-        salary_max: 5000 + (i * 1500),
-        salary_currency: 'MYR',
-        salary_period: 'month',
-        description: `We are seeking a talented ${keyword} professional to join our team. This is an exciting opportunity to work on cutting-edge projects and grow your career. Requirements include strong analytical skills, excellent communication, and a passion for innovation.`,
-        posted_date: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)).toISOString(),
-        original_url: `https://www.jobstreet.com.my/jobs?keywords=${encodeURIComponent(keyword)}`,
-        source_platform: platform,
-        experience_level: ['Entry Level', 'Mid Level', 'Senior', 'Entry Level', 'Mid Level'][i % 5],
-    }))
+        // Generate accurate title
+        const baseTitle = keyword.charAt(0).toUpperCase() + keyword.slice(1)
+        const suffix = isInternship ? 'Intern' : ['Executive', 'Specialist', 'Manager', 'Lead', 'Analyst'][i % 5]
+        const jobTitle = `${baseTitle} ${suffix}`
+
+        return {
+            job_title: jobTitle,
+            company_name: company,
+            location: 'Kuala Lumpur',
+            job_type: jobType,
+            work_arrangement: ['Remote', 'Hybrid', 'On-site'][i % 3],
+            salary_min: salaryMin,
+            salary_max: salaryMax,
+            salary_currency: 'MYR',
+            salary_period: 'month',
+            description: `We are seeking a talented ${jobTitle} to join our team in Kuala Lumpur. This is an exciting opportunity to work on cutting-edge projects. Requirements include strong skills in ${keyword}.`,
+            posted_date: new Date(now.getTime() - (i * 24 * 60 * 60 * 1000)).toISOString(),
+            // Google Search fallback link
+            original_url: `https://www.google.com/search?q=${encodeURIComponent(`${jobTitle} ${company} JobStreet Malaysia`)}`,
+            source_platform: platform,
+            experience_level: isInternship ? 'Entry Level' : ['Entry Level', 'Mid Level', 'Senior'][i % 3],
+        }
+    })
 }
