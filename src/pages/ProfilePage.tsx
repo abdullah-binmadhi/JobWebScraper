@@ -21,11 +21,13 @@ export function ProfilePage() {
 
     useEffect(() => {
         // Get guest ID
-        const id = localStorage.getItem('job_scraper_guest_id')
-        if (id) {
-            setUserId(id)
-            fetchProfile(id)
+        let id = localStorage.getItem('job_scraper_guest_id')
+        if (!id) {
+            id = '00000000-0000-0000-0000-000000000000'
+            localStorage.setItem('job_scraper_guest_id', id)
         }
+        setUserId(id)
+        fetchProfile(id)
     }, [])
 
     const fetchProfile = async (uid: string) => {

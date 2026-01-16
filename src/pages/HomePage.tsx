@@ -27,7 +27,7 @@ export function HomePage() {
     useEffect(() => {
         let id = localStorage.getItem('job_scraper_guest_id')
         if (!id) {
-            id = crypto.randomUUID()
+            id = '00000000-0000-0000-0000-000000000000'
             localStorage.setItem('job_scraper_guest_id', id)
         }
         setUserId(id)
