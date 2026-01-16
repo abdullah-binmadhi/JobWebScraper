@@ -53,7 +53,7 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
         localFilters.salaryMin
 
     return (
-        <div className="flex flex-col h-full max-h-[calc(100vh-8rem)] bg-card rounded-xl border border-border overflow-hidden">
+        <div className="flex flex-col max-h-[calc(100vh-8rem)] bg-card rounded-xl border border-border overflow-hidden shadow-sm">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border bg-card z-10">
                 <div className="flex items-center gap-2">
@@ -189,8 +189,14 @@ export function FilterPanel({ filters, onFilterChange, disabled = false }: Filte
             {/* Footer with Apply Button */}
             <div className="p-5 border-t border-border bg-card z-10">
                 <Button onClick={applyFilters} className="w-full" disabled={disabled}>
-                    <Check className="mr-2 h-4 w-4" />
-                    Apply Filters
+                    {disabled ? (
+                        <>Searching...</>
+                    ) : (
+                        <>
+                            <Check className="mr-2 h-4 w-4" />
+                            Apply Filters
+                        </>
+                    )}
                 </Button>
             </div>
         </div>
