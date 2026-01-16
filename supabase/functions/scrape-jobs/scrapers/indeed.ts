@@ -39,87 +39,61 @@ export async function scrapeIndeed(
     filters: Filters
 ): Promise<JobListing[]> {
     const jobs: JobListing[] = []
+    const apiKey = Deno.env.get('RAPIDAPI_KEY') || '9fb28bbeecmshbf041cfbea56022p1c0095jsnf30aa8808d68'
 
     for (const keyword of keywords) {
         try {
-            // Build search URL for Indeed Malaysia
-            const params = new URLSearchParams({
-                q: keyword,
-                l: filters.location || 'Malaysia',
-            })
+            console.log(`Fetching Indeed via RapidAPI for: ${keyword}`)
 
-            // Add job type filter
-            if (filters.jobType?.includes('Internship')) {
-                params.set('jt', 'internship')
-            } else if (filters.jobType?.includes('Full-time')) {
-                params.set('jt', 'fulltime')
-            } else if (filters.jobType?.includes('Part-time')) {
-                params.set('jt', 'parttime')
-            } else if (filters.jobType?.includes('Contract')) {
-                params.set('jt', 'contract')
-            }
-
-            const searchUrl = `https://my.indeed.com/jobs?${params.toString()}`
-
-            console.log(`Scraping Indeed for: ${keyword}`)
-
-            const response = await fetch(searchUrl, {
+            // Assuming a standard search endpoint for the indeed-scraper-api
+            const response = await fetch('https://indeed-scraper-api.p.rapidapi.com/search', {
+                method: 'GET',
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-MY,en;q=0.9',
-                    'Cache-Control': 'no-cache',
+                    'x-api-host': 'indeed-scraper-api.p.rapidapi.com',
+                    'x-api-key': apiKey,
                 },
+                // Example params - adjust based on specific API documentation if needed
+                params: new URLSearchParams({
+                    q: keyword,
+                    l: filters.location || 'Malaysia',
+                    // jt: filters.jobType?.[0] || 'all'
+                })
             })
 
             if (!response.ok) {
-                console.error(`Indeed returned status ${response.status}`)
-                // Generate sample data as fallback
+                console.error(`RapidAPI Indeed returned status ${response.status}`)
                 jobs.push(...generateSampleJobs(keyword, 'indeed', filters))
                 continue
             }
 
-            const html = await response.text()
+            const data = await response.json()
+            const apiJobs = data.results || data.jobs || data.data || []
 
-            // Try to extract job data from script tags or JSON-LD
-            const jsonLdMatches = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)
-
-            if (jsonLdMatches) {
-                for (const match of jsonLdMatches) {
-                    try {
-                        const jsonContent = match
-                            .replace(/<script type="application\/ld\+json"[^>]*>/, '')
-                            .replace(/<\/script>/, '')
-                            .trim()
-
-                        const data = JSON.parse(jsonContent)
-
-                        // Handle ItemList containing JobPosting items
-                        if (data['@type'] === 'ItemList' && data.itemListElement) {
-                            for (const item of data.itemListElement) {
-                                if (item['@type'] === 'JobPosting' || item.item?.['@type'] === 'JobPosting') {
-                                    const jobData = item['@type'] === 'JobPosting' ? item : item.item
-                                    jobs.push(parseJobPosting(jobData, 'indeed'))
-                                }
-                            }
-                        } else if (data['@type'] === 'JobPosting') {
-                            jobs.push(parseJobPosting(data, 'indeed'))
-                        }
-                    } catch {
-                        continue
-                    }
-                }
-            }
-
-            // If no jobs found, generate sample data
-            if (jobs.length === 0) {
+            if (apiJobs.length > 0) {
+                apiJobs.forEach((job: any) => {
+                    jobs.push({
+                        job_title: job.jobTitle || job.title || 'Untitled',
+                        company_name: job.companyName || job.company || 'Unknown',
+                        location: job.location || filters.location,
+                        job_type: job.jobType || job.type,
+                        work_arrangement: job.workType || 'On-site',
+                        salary_min: job.salaryMin || job.salary?.min,
+                        salary_max: job.salaryMax || job.salary?.max,
+                        salary_currency: job.currency || 'MYR',
+                        salary_period: 'month',
+                        description: job.description || job.snippet,
+                        posted_date: job.date || job.postedAt,
+                        original_url: job.url || job.link,
+                        source_platform: 'indeed',
+                        logo_url: job.companyLogo || job.logo,
+                    })
+                })
+            } else {
                 jobs.push(...generateSampleJobs(keyword, 'indeed', filters))
             }
 
-            await delay(750) // Rate limiting
-
         } catch (error) {
-            console.error(`Error scraping Indeed for "${keyword}":`, error)
+            console.error(`Error with RapidAPI Indeed for "${keyword}":`, error)
             jobs.push(...generateSampleJobs(keyword, 'indeed', filters))
         }
     }

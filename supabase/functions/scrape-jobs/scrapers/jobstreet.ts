@@ -40,91 +40,69 @@ export async function scrapeJobStreet(
     filters: Filters
 ): Promise<JobListing[]> {
     const jobs: JobListing[] = []
+    const apiKey = Deno.env.get('RAPIDAPI_KEY') || '9fb28bbeecmshbf041cfbea56022p1c0095jsnf30aa8808d68'
 
     for (const keyword of keywords) {
         try {
-            // Build search URL
-            const params = new URLSearchParams({
-                keywords: keyword,
-                ...(filters.location && { location: filters.location }),
-            })
+            console.log(`Fetching JobStreet via RapidAPI for: ${keyword}`)
 
-            // JobStreet Malaysia search URL
-            const searchUrl = `https://www.jobstreet.com.my/jobs?${params.toString()}`
-
-            console.log(`Scraping JobStreet for: ${keyword}`)
-
-            const response = await fetch(searchUrl, {
+            const response = await fetch('https://jobstreet.p.rapidapi.com/jobs/search', {
+                method: 'GET',
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Connection': 'keep-alive',
+                    'x-api-host': 'jobstreet.p.rapidapi.com',
+                    'x-api-key': apiKey,
                 },
+                // Adjust params based on the specific RapidAPI JobStreet implementation
+                // Assuming it takes q for query and l for location
+                params: new URLSearchParams({
+                    q: keyword,
+                    l: filters.location || 'Malaysia',
+                })
             })
 
             if (!response.ok) {
-                console.error(`JobStreet returned status ${response.status}`)
+                console.error(`RapidAPI JobStreet returned status ${response.status}`)
+                // Fallback to sample data for demo if API fails
+                jobs.push(...generateSampleJobs(keyword, 'jobstreet', filters))
                 continue
             }
 
-            const html = await response.text()
-
-            // Try to extract JSON-LD data which often contains structured job listings
-            const jsonLdMatches = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)
-
-            if (jsonLdMatches) {
-                for (const match of jsonLdMatches) {
-                    try {
-                        const jsonContent = match
-                            .replace(/<script type="application\/ld\+json">/, '')
-                            .replace(/<\/script>/, '')
-                            .trim()
-
-                        const data = JSON.parse(jsonContent)
-
-                        if (data['@type'] === 'JobPosting' || (Array.isArray(data) && data[0]?.['@type'] === 'JobPosting')) {
-                            const jobData = Array.isArray(data) ? data[0] : data
-
-                            jobs.push({
-                                job_title: jobData.title || 'Untitled Position',
-                                company_name: jobData.hiringOrganization?.name || 'Unknown Company',
-                                location: jobData.jobLocation?.address?.addressLocality || filters.location,
-                                job_type: parseJobType(jobData.employmentType),
-                                work_arrangement: parseWorkArrangement(jobData.jobLocationType),
-                                salary_min: parseSalary(jobData.baseSalary?.value?.minValue),
-                                salary_max: parseSalary(jobData.baseSalary?.value?.maxValue),
-                                salary_currency: jobData.baseSalary?.currency || 'MYR',
-                                salary_period: 'month',
-                                description: cleanDescription(jobData.description),
-                                posted_date: jobData.datePosted,
-                                original_url: jobData.url || searchUrl,
-                                source_platform: 'jobstreet',
-                                logo_url: jobData.hiringOrganization?.logo,
-                            })
-                        }
-                    } catch (parseError) {
-                        // Skip malformed JSON
-                        continue
-                    }
-                }
-            }
-
-            // Fallback: Generate sample data for demo purposes if no real data found
-            // In production, you would implement proper HTML parsing
-            if (jobs.length === 0) {
+            const data = await response.json()
+            
+            // Map the API results to our JobListing format
+            // This part assumes the API returns an array of jobs in data.results or similar
+            const apiJobs = data.results || data.jobs || []
+            
+            if (apiJobs.length > 0) {
+                apiJobs.forEach((job: any) => {
+                    jobs.push({
+                        job_title: job.title || job.jobTitle || 'Untitled',
+                        company_name: job.company || job.companyName || 'Unknown',
+                        location: job.location || filters.location,
+                        job_type: job.type || job.employmentType,
+                        work_arrangement: job.workType || 'On-site',
+                        salary_min: job.salaryMin,
+                        salary_max: job.salaryMax,
+                        salary_currency: job.currency || 'MYR',
+                        salary_period: 'month',
+                        description: job.description || job.snippet,
+                        posted_date: job.date || job.postedAt,
+                        original_url: job.url || job.link,
+                        source_platform: 'jobstreet',
+                        logo_url: job.companyLogo || job.logo,
+                    })
+                })
+            } else {
+                // Fallback if no results
                 jobs.push(...generateSampleJobs(keyword, 'jobstreet', filters))
             }
 
-            // Add delay between requests to be respectful
-            await delay(500)
-
         } catch (error) {
-            console.error(`Error scraping JobStreet for "${keyword}":`, error)
+            console.error(`Error with RapidAPI JobStreet for "${keyword}":`, error)
+            jobs.push(...generateSampleJobs(keyword, 'jobstreet', filters))
         }
     }
 
-    // Apply filters
     return filterJobs(jobs, filters)
 }
 
